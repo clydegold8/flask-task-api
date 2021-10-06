@@ -1,11 +1,12 @@
 from flask import Blueprint, jsonify, request
+from flask.app import Flask
 from . import db
 from .models import Task
 
 main = Blueprint('main', __name__)
 
 # Add task API
-@main.route('/add_task', methods=['POST'])
+@main.route('/task', methods=['POST'])
 def add_task():
     task_data = request.get_json()
 
@@ -16,12 +17,19 @@ def add_task():
 
     db.session.add(new_task)
     db.session.commit()
+    task_query = db.session.query(Task).order_by(Task.id.desc()).first()
+    tasks = []
 
-    return 'Done', 201
+    tasks.append({'id': task_query.id, 'taskName': task_query.taskName,
+                     'isCrashOut': task_query.isCrashOut})
+
+    response = jsonify({'tasks': tasks})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 # Update Task API
-@main.route('/update_task/<id>', methods=['PUT'])
+@main.route('/task/<id>', methods=['PUT'])
 def update_task_by_id(id):
     task_data = request.get_json()
     get_task = Task.query.get(id)
@@ -50,7 +58,10 @@ def get_task_by_id(id):
     getTask.append({'id': get_task.id, 'taskName': get_task.taskName,
                     'isCrashOut': get_task.isCrashOut})
 
-    return jsonify({'tasks': getTask})
+    response = jsonify({'tasks': getTask})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
 
 
 # Get All Tasks
@@ -63,13 +74,19 @@ def tasks():
         tasks.append({'id': task.id, 'taskName': task.taskName,
                      'isCrashOut': task.isCrashOut})
 
-    return jsonify({'tasks': tasks})
+    response = jsonify({'tasks': tasks})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
 
 # Delete task By ID
-@main.route('/delete_task/<id>', methods=['DELETE'])
+@main.route('/task/<id>', methods=['DELETE'])
 def delete_task_by_id(id):
     get_task = Task.query.get(id)
     db.session.delete(get_task)
     db.session.commit()
+    taskJson = []
 
-    return "", 204
+    taskJson.append({'id': get_task.id, 'taskName': get_task.taskName,
+                    'isCrashOut': get_task.isCrashOut})
+    return jsonify({'tasks': taskJson})
