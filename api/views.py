@@ -27,6 +27,23 @@ def add_task():
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
+# Select Complete & Delete Task API
+@main.route('/tasks', methods=['PUT'])
+def select_complete_tasks():
+    task_data = request.get_json()
+    taskJson = []
+
+    for task in task_data:
+        get_task = Task.query.get(task['id'])
+        db.session.delete(get_task)
+        db.session.commit()
+        taskJson.append({'id': task['id'], 'taskName': task['taskName'],
+                     'isCrashOut': task['isCrashOut']})
+    
+    response = jsonify({'tasks': taskJson})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
 
 # Update Task API
 @main.route('/task/<id>', methods=['PUT'])
